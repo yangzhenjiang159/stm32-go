@@ -18,11 +18,20 @@
 
 | 项 | 值 |
 |---|---|
-| 开发板 | 尚硅谷 STM32 开发板，PCB 丝印 **`v1.01 -204`**（随附原理图 V1.0 / 2024-08-08） |
-| MCU | **STM32F103ZET6**（High-density），Device ID `0x414`，封装 LQFP144 |
+| 开发板 | **尚硅谷** STM32 开发板，PCB 丝印 **`v1.01 -204`**（物主目视确认）；`www.atguigu.com` 实物照片确认；随附原理图 **V1.0 / 2024-08-08 / 共 13 页**（无缺页） |
+| 屏模块 PCB | 版本丝印 **`V1.0-198`**（**与开发板 `v1.01 -204` 是两块不同的板，勿混**） |
+| MCU | **STM32F103ZET6**（High-density），封装 LQFP144（型号 `Z` 位 = 144 pin） |
+| 芯片身份 | Device ID `0x414`、UID `0x57058817 37375547 05D8FF36`、DBGMCU `REV_ID = 0x1003`（**均为 ST-Link 实测**） |
 | 内核 | Cortex-M3，**无 FPU**（`float`/`double` 一律走软件浮点，慢且占 Flash） |
-| Flash / RAM | 512 KB / 64 KB（`lcd_love/GCC/stm32_flash.ld`） |
-| 系统时钟 | **HCLK = 72 MHz**（HSE 8 MHz × 9） |
+| Flash / RAM | 512 KB / 64 KB（**实测**：ST-Link 报 512 KB；复位后 SP = `0x20010000` → RAM 顶 64 KB） |
+| 系统时钟 | **HCLK = 72 MHz**、APB1 = 36 MHz、APB2 = 72 MHz（**实测** `RCC_CFGR = 0x001D040A`：SW/SWS = PLL、PLLSRC = HSE、PLLMUL = ×9、HPRE /1、PPRE1 /2、PPRE2 /1；`RCC_CR` 显示 HSERDY = 1、PLLRDY = 1） |
+| LSE / RTC | 未使用（**实测** `RCC_BDCR = 0` → LSE 未开启） |
+| 选项字节 | `RDP = 0xA5`（Level 0，**未启用读保护**）；写保护全未启用；`nBOOT1 = 1` → BOOT1 = 0（**实测只读**） |
+| 启动配置 | **BOOT0 有 10 kΩ 下拉**（原理图页 2 原文「BOOT0默认为10K拉低，跳线1/2闭合是为拉高」）；BOOT1 = **PB2** |
+| 复位电路 | **R13 = 10 kΩ 上拉到 3V3** + 按键 **SW2** + **C22 = 100 nF**（原理图页 2） |
+| 电源 | 5V → **`AMS1117-3.3V`（位号 Q1）** → 3V3；输入来自 USB 5V 或 DC12V；C5 = C6 = 10 µF（页 1）。⚠️ 额定电流需查其 datasheet |
+| HSE 晶振 | **X2 = 8 MHz**，负载电容 **C9 = C10 = 20 pF**（原理图页 2） |
+| LSE 晶振 | X1 = 32.768 kHz + 12 pF ×2（页 2；**固件未使用**，`RCC_BDCR = 0`） |
 | 下载器 | ST-Link V2，SN `066EFF505375485067123748`，固件 `V2J43S0`，虚拟串口 **COM6**，SWD @ 4 MHz |
 | 工具链 | GNU Arm Embedded **10.3**（工作区 `gcc-arm/gcc-arm-none-eabi-10.3-2021.10/bin`） |
 | 编译器 | `arm-none-eabi-gcc`，参数见 `lcd_love/build_gcc.ps1`（`-mcpu=cortex-m3 -mthumb -std=gnu99 -O2`） |
@@ -33,9 +42,28 @@
 
 | 项 | 值 |
 |---|---|
-| 屏 | 3.5"，**320×480 竖屏**，2×14（28 pin）排针直插开发板 LCD 座 |
-| 驱动 IC | **ILI9488 风格**（读 `0xD3` 返回 `0x9488`）⚠️ 资料目录名写 ILI9486，**照抄其序列必白屏** |
+| 屏 | 3.5"，**320×480 竖屏**，2×14（28 pin）排针直插开发板 LCD 座（原理图型号 **`PZ254-2-14-S`**，页 12「TFT-LCD接口」） |
+| 屏座接线 | 页 12 给出逐脚网络：D0~D15 / **NE4** / **A10** / **NWE** / **NOE** / LCD-RST / LCD-BG / I2C1-SDA,SCL / GT-INT（详见 `HARDWARE-TRUTH.md` §2.8） |
+| 驱动 IC | **ILI9488 风格**（读 `0xD3` 返回 `0x9488`）⚠️ 资料目录名写 ILI9486，**照抄其序列必白屏**。驱动 IC 是 **COG 裸片**（压焊在玻璃上）→ **外观不可见、无 datasheet**，只能靠实测风格判定 |
+| **触摸控制器** | **`FT5316WE`**（敦泰 / FocalTech 电容触摸，QFN 封在触摸排线上；实物照片 `snapshots/20260915-屏模块背面.jpg`）。⚠️ 原理图网络名却叫 `GT-INT`/`GT-RST`（Goodix 风格）→ **别照 GT911 写驱动**。本工程**未使用触摸** |
 | 资料例程 | `3.50LCD焊接37pin-ILI9486技术资料` 面向 **37pin** 模块，与本板 **28pin 不匹配**，其 `Template.hex` 在本板必然白屏 |
+
+### 板载其它器件（实物照片确认，2026-09-15）
+
+> 照片在 `snapshots/`（AI 可直接读图）：`20260915-整板正面.jpg` / `-整板背面.jpg` / `-MCU特写.jpg`。
+> ⚠️ 这些器件**本工程都没有初始化**，将来调"下一个器件"时再逐个开。
+
+| 器件 | 型号（照片丝印） | 总线（推断） |
+|---|---|---|
+| 以太网 | **W5500** + RJ45 `HR911105A` | SPI |
+| ESP32-C3 | `ESP32-C3 模块` 插座 | UART / SPI |
+| RS232 / RS485 | `SP3232` + DB9 / 绿色端子 + 收发器 | UART |
+| CAN | `CAN` 区收发器 | CAN |
+| **SDRAM** | **`ISSI IS62WV51216BLL-55TLI`**（512 K×16） | **FSMC，与屏共用 D0~D15**（占 NE1~NE3 之一，**具体 bank 待确认**） |
+| NOR FLASH | `W25Q16JVSSIQ`（2 MB，Winbond） | SPI |
+| EEPROM | `U3`（丝印尾 `C027`，疑 AT24C02 系） | I2C |
+| SD 卡 / NRF24L01 / RTC 电池 | `SD卡` 座 / `NRF24L01 模块` 座 / `CR1220` 座 | SPI / — |
+| IO 引出 | 左/右 `A/B/C/D/F/G` 全 IO 排针（`MCU所有IO引出排针`） | — |
 
 ### 已占用引脚（禁止重复分配）
 
@@ -50,9 +78,26 @@
 | **PB0** | LCD_LED 背光 | 高电平点亮 |
 | PC1 / PC2 | GT-INT / GT-RST | 电容触摸，**本工程未使用**；I2C1（PB6/PB7）为触摸预留 |
 
+### 芯片内实测核对（2026-09-15，只读）
+
+> 上表引脚已用 ST-Link 直读寄存器**逐条核对一致**，原始读数 + 解码见
+> [`docs/hardware-truth/HARDWARE-TRUTH.md`](docs/hardware-truth/HARDWARE-TRUTH.md) §2。
+
+| 实测项 | 结论 |
+|---|---|
+| 数据线 PD14/PD15/PD0/PD1/PE7~PE15/PD8/PD9/PD10 | 全部 **复用推挽 50 MHz**（`CRL/CRH` = `B`） ✅ |
+| PG0 / PG12 | **复用推挽**（FSMC A10 / NE4） ✅ |
+| PG15（RST） | **通用推挽**，ODR + IDR 实测为高 → 复位已释放 ✅ |
+| PB0（背光） | **通用推挽**，ODR + IDR 实测为高 → 背光点亮 ✅ |
+| PD4 / PD5（RD/WR） | 空闲实测为高 ✅ |
+| PB6 / PB7（触摸 I2C） | 实测为**浮空输入**（未配 I2C，与"未使用"一致） ✅ |
+| GPIOC 相关引脚（PC1/PC2） | ⚠️ **GPIOC 时钟未开**（`APB2ENR` bit4 = 0）→ 其寄存器读数**不可作判据**，标 `TODO(待确认)` |
+| 未使用外设 | `APB1ENR = 0`；`APB2ENR` 仅 GPIOB/D/E/F/G；未开 AFIO → **无重映射、无中断外设** |
+
 ### 6 条必须遵守的配置（改错就白屏）
 
 1. FSMC 时序 `ADDSET=15`、`DATAST=255`（本板 72MHz；教程按 36MHz 写的过快）
+   —— **已实测确认**：芯片内 `FSMC_BTR4`（NE4）= `0x0FFFFFFF` → ADDSET = 15、DATAST = 255
 2. 初始化序列用 ILI9488 风格，**必须含 `0xF7`**
 3. 像素格式 `0x3A = 0x55`（16bit/像素）
 4. 扫描方向 `0x36 = 0x08`（320×480 竖屏）
@@ -101,7 +146,19 @@ powershell -File lcd_love\build_gcc.ps1
 
 **编译后必须看 `arm-none-eabi-size` 输出**：Flash 512KB / RAM 64KB 是硬上限，改动要报增量。
 
-> ⚠️ `ST-LINK_CLI` **每次连接都会复位目标**；要读"运行中"的内存必须加 `HOTPLUG`。
+# ⑤ 只读寄存器核实（时钟 / FSMC / GPIO / 器件签名 / 选项字节）
+& $cli -c SWD -Q -List                      # 器件身份、Flash 容量、目标电压
+& $cli -c SWD HOTPLUG -Q -r32 0x40021000 8  # RCC：CR, CFGR
+& $cli -c SWD HOTPLUG -Q -r32 0xA0000000 32 # FSMC：BCR/BTR（NE4 = BCR4/BTR4）
+& $cli -c SWD HOTPLUG -Q -r32 0x40012000 16 # GPIOG；D=0x40011400, E=0x40011800, B=0x40010C00
+& $cli -c SWD HOTPLUG -Q -r32 0x1FFFF7E0 16 # 器件签名 + 96-bit UID
+& $cli -c SWD HOTPLUG -Q -r32 0x1FFFF800 16 # 选项字节（**只读**）
+```
+
+> ⚠️ **只读**。`-ob`（写选项字节）、擦除、烧录一律**人工执行**（§5 闸门）。
+> ⚠️ **未开时钟的外设，其寄存器读数不可作判据**（例：GPIOC 时钟未开 → `CRL/CRH/IDR` 读数无意义）。
+> ⚠️ `BTRx` 的复位值是 `0x0FFFFFFF`（全 1），与 `ADDSET=15/DATAST=255` 数值巧合相同 →
+> **不能由读数区分"固件写入生效"还是"保持复位值"**，只能确认"芯片内实际时序 = 15/255"。
 
 ---
 
@@ -185,6 +242,9 @@ powershell -File lcd_love\build_gcc.ps1
 | 内容跑到屏幕外 | 扫描方向错 | `0x36 = 0x08` |
 | `armasm/armcc` 报授权失败 | 需要 license | 用工作区 `gcc-arm/` 的 GCC 10.3 |
 | 画面卡顿/Flash 增长异常 | 无 FPU，`float` 走软件浮点 | 热路径改定点/查表 |
+| 读到的 GPIO/外设寄存器全是复位值或 0 | **该外设时钟未开**，读数无效 | 先查 `RCC->APB2ENR/AHBENR`，再下结论 |
+| 以为"固件写的时序没生效" | `BTR` 复位值本就是 `0x0FFFFFFF`（全 1） | 比对复位值，勿用读数反推是否写入 |
+| 读寄存器后屏幕动画重启 | 不带 `HOTPLUG` 时每次连接都会复位目标 | 读稳态用 `HOTPLUG`；`RCC_CSR.SFTRSTF` 可佐证 |
 
 ---
 
@@ -204,3 +264,4 @@ powershell -File lcd_love\build_gcc.ps1
 | 日期 | 变更 | 变更人 |
 |---|---|---|
 | 2026-09-15 | 初版（依据 `HARDWARE.md` + `lcd_love/README.md` 的实测结论建立） | AI |
+| 2026-09-15 | §1 硬件事实改为**芯片内实测结果**（时钟树 / FSMC NE4 时序 / 全部 GPIO 配置 / 选项字节 / UID），引脚表逐条核对一致 | AI |

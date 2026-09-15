@@ -27,6 +27,12 @@ compile_commands.json
 serial-dumps/
 *.raw
 
+# ── 调试照片：**不入库** ──
+# 理由：体积大（单张 1.5~4 MB）、微信压缩图含 EXIF 隐私信息，且属"本地调试证据"。
+# 只保留使用说明 snapshots/README.md；照片留在本机由 AI 直接读图分析。
+snapshots/*
+!snapshots/README.md
+
 # ── IDE ──
 .vscode/*
 !.vscode/settings.json

@@ -73,7 +73,12 @@ powershell -File lcd_love\build_gcc.ps1
 - [x] AI 上下文与约束：`AGENTS.md` + `.codebuddy/rules/embedded-firmware/RULE.mdc`
 - [ ] **`git init` + `.gitignore`/`.gitattributes`**（换回滚能力）
 - [ ] **纯逻辑抽出来做 PC 单测**（验证闭环，当前最大短板）
-- [ ] 补完 4 项待实物验证（`HARDWARE-TRUTH.md` §6：3V3 裕量 / HSE 频偏 / BOOT0 / 触摸 IC）
+- [x] **芯片内实测复核**：时钟树 / FSMC NE4 时序 / 全部 GPIO 配置 / 选项字节（`HARDWARE-TRUTH.md` §2）
+- [x] 拍板卡照片 3 张 → `snapshots/20260915-整板正面/背面/MCU特写.jpg`（实物与原理图、芯片实测三方一致）
+- [x] 拍屏模块背面 → **触摸 IC = `FT5316WE`**（显示驱动是 COG 裸片，物理上拍不到）
+- [x] 确认丝印归属：**屏板 = `V1.0-198`**、**开发板 = `v1.01 -204`**（两块板，编号各自正确）
+- [x] **阶段 0（Gate P0）基本达成** → 结论见 `HARDWARE-TRUTH.md` §9；可直接进入编码/新器件调试
+- [ ] 补完其余待实物验证：3V3 裕量 / HSE 频偏 / BOOT0 下拉 / 触摸 IC
 
 ### 功能类
 
