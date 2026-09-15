@@ -1,0 +1,50 @@
+# ═══════════════════════════════════════════════════════════
+# 工具链：652 MB，**不入库**
+# 复现方式：自行下载 GNU Arm Embedded 10.3 解压到 gcc-arm/ 下
+#   gcc-arm/gcc-arm-none-eabi-10.3-2021.10/bin
+# ═══════════════════════════════════════════════════════════
+gcc-arm/
+
+# ── 编译产物（保留固件 hex 作为可烧录产物）──
+lcd_love/Obj/*
+!lcd_love/Obj/lcd_love.hex
+*.o
+*.d
+*.elf
+*.map
+build/
+build-*/
+cmake-build-*/
+
+# ── 静态分析 / 构建缓存 ──
+reports/
+*.sarif
+cppcheck-*.xml
+clang-tidy-*.log
+compile_commands.json
+
+# ── 串口抓包 ──
+serial-dumps/
+*.raw
+
+# ── IDE ──
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.uvprojx
+*.uvoptx
+*.uvguix.*
+JLinkLog.txt
+RTE/
+
+# ── 系统 ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 绝不入库 ──
+.env
+.env.*
+*.pem
+*.key
+secrets/

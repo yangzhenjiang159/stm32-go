@@ -1,0 +1,23 @@
+# 换行符策略（Windows 协作必配，见 docs/Win11-AI嵌入式工程落地方案.md §4.7）
+
+# 源码统一 LF（避免 CRLF 造成的 diff 噪音）
+* text=auto eol=lf
+
+# 脚本必须 CRLF，否则 Windows PowerShell 5.1 中可能解析异常
+*.ps1   text eol=crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# 二进制产物不做换行转换
+*.bin   binary
+*.hex   binary
+*.elf   binary
+*.a     binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.pdf   binary
+
+# 生成物/配置统一 LF
+*.ld    text eol=lf
+*.s     text eol=lf
